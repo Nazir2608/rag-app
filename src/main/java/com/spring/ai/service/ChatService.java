@@ -1,7 +1,10 @@
 package com.spring.ai.service;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.document.Document;
+import org.springframework.ai.vectorstore.SearchRequest;
 import org.springframework.ai.vectorstore.VectorStore;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.Resource;
@@ -25,8 +28,9 @@ public class ChatService {
 
     private VectorStore vectorStore;
 
-    public ChatService(ChatClient chatClient, VectorStore vectorStore) {
+    private final Logger logger= LoggerFactory.getLogger(ChatService.class);
 
+    public ChatService(ChatClient chatClient, VectorStore vectorStore) {
         this.chatClient = chatClient;
         this.vectorStore=vectorStore;
     }
@@ -59,5 +63,38 @@ public class ChatService {
         List<Document> documentList = list.stream().map(Document::new).collect(Collectors.toList());
         this.vectorStore.add(documentList);
 
+    }
+
+    public String searchData(String query, String conversationId) {
+
+        logger.info("Received query='{}', conversationId='{}'", query, conversationId);
+
+        SearchRequest searchRequest = SearchRequest.builder().query(query).topK(5).build();
+
+        List<Document> documents = vectorStore.similaritySearch(searchRequest);
+
+        logger.info("Retrieved {} documents from Vector Store", documents.size());
+
+        documents.forEach(doc -> logger.info("Document: {}", doc.getText()));
+
+        String contextData = documents.stream().map(Document::getText).collect(Collectors.joining("\n\n"));
+
+        logger.info("Context sent to LLM:\n{}", contextData);
+
+        String response = chatClient
+                .prompt()
+                .advisors(a -> a.param(CONVERSATION_ID, conversationId))
+                .system(system -> system
+                        .text(systemMessage)
+                        .param("documents", contextData))
+                .user(user -> user
+                        .text(userMessage)
+                        .param("query", query))
+                .call()
+                .content();
+
+        logger.info("LLM Response: {}", response);
+
+        return response;
     }
 }

@@ -35,4 +35,9 @@ public class ChatController {
         return "Data saved successfully into MariaDB Vector Store.";
     }
 
+    @GetMapping("/search-data")
+    public ResponseEntity<String> searchData(@RequestParam(value="q", required = true) String query, @RequestParam String conversationId) {
+        return ResponseEntity.ok(chatService.searchData(query, conversationId));
+    }
+
 }
