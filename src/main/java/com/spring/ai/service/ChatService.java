@@ -3,6 +3,7 @@ package com.spring.ai.service;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.ai.chat.client.ChatClient;
+import org.springframework.ai.chat.client.advisor.vectorstore.QuestionAnswerAdvisor;
 import org.springframework.ai.document.Document;
 import org.springframework.ai.vectorstore.SearchRequest;
 import org.springframework.ai.vectorstore.VectorStore;
@@ -67,26 +68,28 @@ public class ChatService {
 
     public String searchData(String query, String conversationId) {
 
-        logger.info("Received query='{}', conversationId='{}'", query, conversationId);
-
-        SearchRequest searchRequest = SearchRequest.builder().query(query).topK(5).build();
-
-        List<Document> documents = vectorStore.similaritySearch(searchRequest);
-
-        logger.info("Retrieved {} documents from Vector Store", documents.size());
-
-        documents.forEach(doc -> logger.info("Document: {}", doc.getText()));
-
-        String contextData = documents.stream().map(Document::getText).collect(Collectors.joining("\n\n"));
-
-        logger.info("Context sent to LLM:\n{}", contextData);
+//        logger.info("Received query='{}', conversationId='{}'", query, conversationId);
+//
+//        SearchRequest searchRequest = SearchRequest.builder().query(query).topK(5).build();
+//
+//        List<Document> documents = vectorStore.similaritySearch(searchRequest);
+//
+//        logger.info("Retrieved {} documents from Vector Store", documents.size());
+//
+//        documents.forEach(doc -> logger.info("Document: {}", doc.getText()));
+//
+//        String contextData = documents.stream().map(Document::getText).collect(Collectors.joining("\n\n"));
+//
+//        logger.info("Context sent to LLM:\n{}", contextData);
 
         String response = chatClient
                 .prompt()
+                .advisors(QuestionAnswerAdvisor.builder(vectorStore).build())
+//                .advisors(a -> a.param(CONVERSATION_ID, conversationId))
+//                .system(system -> system
+//                        .text(systemMessage)
+//
                 .advisors(a -> a.param(CONVERSATION_ID, conversationId))
-                .system(system -> system
-                        .text(systemMessage)
-                        .param("documents", contextData))
                 .user(user -> user
                         .text(userMessage)
                         .param("query", query))
