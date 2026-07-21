@@ -40,4 +40,11 @@ public class ChatController {
         return ResponseEntity.ok(chatService.searchData(query, conversationId));
     }
 
+    @GetMapping("/retrieval-data")
+    public ResponseEntity<String> searchThroughRetrievalAugmentationAdvisor(@RequestParam(value="q", required = true) String query, @RequestParam String conversationId) {
+        return ResponseEntity.ok(chatService.searchThroughRetrievalAugmentationAdvisor(query, conversationId));
+    }
+
+
+
 }

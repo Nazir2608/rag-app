@@ -1,10 +1,14 @@
 package com.spring.ai.service;
 
+import org.jspecify.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.client.advisor.vectorstore.QuestionAnswerAdvisor;
 import org.springframework.ai.document.Document;
+import org.springframework.ai.rag.advisor.RetrievalAugmentationAdvisor;
+import org.springframework.ai.rag.retrieval.search.DocumentRetriever;
+import org.springframework.ai.rag.retrieval.search.VectorStoreDocumentRetriever;
 import org.springframework.ai.vectorstore.SearchRequest;
 import org.springframework.ai.vectorstore.VectorStore;
 import org.springframework.beans.factory.annotation.Value;
@@ -99,5 +103,26 @@ public class ChatService {
         logger.info("LLM Response: {}", response);
 
         return response;
+    }
+
+    public @Nullable String searchThroughRetrievalAugmentationAdvisor(String query, String conversationId) {
+
+        var advisor = RetrievalAugmentationAdvisor.builder()
+                .documentRetriever(VectorStoreDocumentRetriever
+                .builder().vectorStore(vectorStore)
+                .topK(3)
+                .similarityThreshold(0.5).build())
+                .build();
+
+
+        return chatClient
+                .prompt()
+                .advisors(advisor)
+                .advisors(a -> a.param(CONVERSATION_ID, conversationId))
+                .user(user->user.text(userMessage)
+                        .param("query",query))
+                .call()
+                .content();
+
     }
 }
