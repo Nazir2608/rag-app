@@ -7,6 +7,7 @@ import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.client.advisor.vectorstore.QuestionAnswerAdvisor;
 import org.springframework.ai.document.Document;
 import org.springframework.ai.rag.advisor.RetrievalAugmentationAdvisor;
+import org.springframework.ai.rag.generation.augmentation.ContextualQueryAugmenter;
 import org.springframework.ai.rag.retrieval.search.DocumentRetriever;
 import org.springframework.ai.rag.retrieval.search.VectorStoreDocumentRetriever;
 import org.springframework.ai.vectorstore.SearchRequest;
@@ -112,6 +113,7 @@ public class ChatService {
                 .builder().vectorStore(vectorStore)
                 .topK(3)
                 .similarityThreshold(0.5).build())
+                .queryAugmenter(ContextualQueryAugmenter.builder().allowEmptyContext(true).build())
                 .build();
 
 
